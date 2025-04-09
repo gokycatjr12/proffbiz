@@ -1,6 +1,7 @@
 import streamlit as st
 import openai
 import PyPDF2
+from streamlit_card import card
 
 # 🔐 Check if OpenAI key is set in secrets
 if "OPENAI_API_KEY" not in st.secrets:
@@ -22,16 +23,68 @@ You can:
 
 # 📁 Resume Upload or Text Input
 uploaded_file = st.file_uploader("Upload your resume (PDF only)", type=["pdf"])
-user_input = st.text_area("Or describe your job/paste your bio here:")
+user_input = st.text_area(
+    "Or describe your job/paste your bio here:",
+    placeholder="Example: I've worked as a marketing manager for 15 years, leading teams, managing ad campaigns, and analyzing market trends..."
+)
 
 # 📄 Extract text from uploaded PDF
 resume_text = ""
 if uploaded_file:
-    pdf_reader = PyPDF2.PdfReader(uploaded_file)
-    resume_text = "\n".join(page.extract_text() for page in pdf_reader.pages if page.extract_text())
+    if uploaded_file.type == "application/pdf":
+        try:
+            pdf_reader = PyPDF2.PdfReader(uploaded_file)
+            resume_text = "\n".join(
+                page.extract_text() for page in pdf_reader.pages if page.extract_text()
+            )
+        except Exception as e:
+            st.error(f"❌ Error reading PDF: {e}")
+    else:
+        st.error("❌ Please upload a valid PDF file.")
 
 # 🧾 Final user input for AI prompt
 final_prompt = resume_text.strip() if resume_text else user_input.strip()
+
+# 💳 Passive Income Cards Display Function
+def show_passive_income_cards():
+    st.markdown("## 💸 AI-Powered Passive Income Ideas (Visual Summary)")
+
+    income_ideas = [
+        {
+            "title": "YouTube Automation",
+            "desc": "Create faceless, AI-generated video channels.",
+            "image": "https://cdn-icons-png.flaticon.com/512/1384/1384060.png",
+            "link": "https://pictory.ai"
+        },
+        {
+            "title": "AI Course Creation",
+            "desc": "Use ChatGPT + Canva to create sellable online courses.",
+            "image": "https://cdn-icons-png.flaticon.com/512/4325/4325931.png",
+            "link": "https://teachable.com"
+        },
+        {
+            "title": "Newsletter Automation",
+            "desc": "Use AI to summarize news and grow a Substack following.",
+            "image": "https://cdn-icons-png.flaticon.com/512/5968/5968899.png",
+            "link": "https://substack.com"
+        },
+        {
+            "title": "Digital Products",
+            "desc": "Generate eBooks, templates, or prompts with AI.",
+            "image": "https://cdn-icons-png.flaticon.com/512/2784/2784482.png",
+            "link": "https://gumroad.com"
+        },
+    ]
+
+    cols = st.columns(2)
+    for i, idea in enumerate(income_ideas):
+        with cols[i % 2]:
+            card(
+                title=idea["title"],
+                text=idea["desc"],
+                image=idea["image"],
+                url=idea["link"]
+            )
 
 # 🚀 Process input and generate strategy
 if final_prompt:
@@ -86,6 +139,9 @@ Use plain English. Be concise but specific. Wait for a resume, job summary, or b
     # ✅ Display response
     st.success("✅ Strategy Ready!")
     st.markdown(reply, unsafe_allow_html=True)
+
+    # 💳 Show passive income ideas visually
+    show_passive_income_cards()
 
     # 💾 Save assistant's reply
     st.session_state.messages.append({"role": "assistant", "content": reply})
