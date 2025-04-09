@@ -2,10 +2,13 @@ import streamlit as st
 import openai
 import PyPDF2
 
-# 🔐 OpenAI Client Setup
-client = openai.OpenAI(
-    api_key=["OPENAI_API_KEY"]
-)
+# 🔐 Check if OpenAI key is set in secrets
+if "OPENAI_API_KEY" not in st.secrets:
+    st.error("🚫 OpenAI API key not found. Please set it in Streamlit Cloud secrets.")
+    st.stop()
+
+# ✅ Secure OpenAI Client Setup using the secret
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # 🧠 App Introduction
 st.title("👋 Welcome to RetireGPT!")
